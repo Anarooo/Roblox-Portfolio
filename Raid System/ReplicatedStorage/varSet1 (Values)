@@ -1,0 +1,12 @@
+activeRaid (Bool)
+defaultTeam (Str)
+friendlyCap (Int)
+friendlyCounter (Int)
+friendlyName (Str)1
+hostileCap (Int)
+hostileCounter (Int)
+hostileName (Str)
+raidInitiating (Bool)
+raidTarget (Str)
+timeRemaining (Str)
+timeRemainingS (Int)
