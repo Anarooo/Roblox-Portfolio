@@ -7,8 +7,6 @@ zone1
   firstPointBase
   
   firstPointHolo
-  
-    Handles
     
 zone2a
 
@@ -17,8 +15,6 @@ zone2a
   secondPointBase
   
   secondPointHolo
-  
-    Handles
     
 zone2a
 
@@ -27,8 +23,6 @@ zone2a
   secondPointBase
   
   secondPointHolo
-  
-    Handles
     
 zone3
 
@@ -37,6 +31,3 @@ zone3
   thirdPointBase
   
   thirdPointHolo 
-  
-    Handles
-  
