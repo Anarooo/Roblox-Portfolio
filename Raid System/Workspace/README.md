@@ -3,9 +3,7 @@
 zone1
 
   firstPoint
-  
   firstPointBase
-  
   firstPointHolo
     
 zone2a
