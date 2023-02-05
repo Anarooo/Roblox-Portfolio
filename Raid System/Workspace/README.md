@@ -2,9 +2,9 @@
 
 zone1
 
-  firstPoint
-  firstPointBase
-  firstPointHolo
+  -firstPoint
+  -firstPointBase
+  -firstPointHolo
     
 zone2a
 
