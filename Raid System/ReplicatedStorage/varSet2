@@ -1,0 +1,6 @@
+activeObj (Int)
+currentObjMax (Int)
+currentObjScore (Int)
+firstObjMax (Int)
+secondObjMax (Int)
+thirdObjMax (Int)
