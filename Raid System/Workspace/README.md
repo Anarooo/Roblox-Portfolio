@@ -8,24 +8,18 @@ zone1
     
 zone2a
 
-  secondPoint
-  
-  secondPointBase
-  
-  secondPointHolo
+  - secondPoint
+  - secondPointBase
+  - secondPointHolo
     
 zone2a
 
-  secondPoint
-  
-  secondPointBase
-  
-  secondPointHolo
+  - secondPoint
+  - secondPointBase
+  - secondPointHolo
     
 zone3
 
-  thirdPoint
-  
-  thirdPointBase
-  
-  thirdPointHolo 
+  - thirdPoint
+  - thirdPointBase
+  - thirdPointHolo 
