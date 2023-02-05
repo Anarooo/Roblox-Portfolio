@@ -1,0 +1,369 @@
+--Written by Anaro_Ryker
+--The Arskellius Raid System is property of Anaro Media (Trading As). Unauthorized usage of this system will result in a DMCA Takedown Request.
+
+--[[COMMON VARIABLES]]--
+local scrimmageModules = {}
+local Workspace = game:GetService("Workspace")
+local GroupService = game:GetService("GroupService")
+local Teams = game:GetService("Teams")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+--
+local workspaceFldr = Workspace.arskelliusR
+local replicatedFldr = ReplicatedStorage.arskelliusR
+local varSet1 = replicatedFldr.varSet1
+local varSet2 = replicatedFldr.varSet2
+--
+local raidTime = 3600 --Full raid timer in seconds
+local activeRaid = varSet1.activeRaid --Used to signify if a raid is active
+local raidInitiating = varSet1.raidInitiating --Used to signify if a raid is being initialized
+local timeRemainingS = varSet1.timeRemainingS --Used to store how long is left in the raid in seconds
+local timeRemaining = varSet1.timeRemaining --Used to store how long is left in the raid in MM:SS format
+local raidTarget = varSet1.raidTarget -- Used to store the groupID for the target group or name for the raid target
+local hostileCounter = varSet1.hostileCounter --Used to store how many hostiles are on the Hostiles Team
+local friendlyCounter = varSet1.friendlyCounter --Used to store how many friendlies are on the Friendlies Team
+local hostileCap = varSet1.hostileCap --Used to store the cap for the Hostiles team
+local friendlyCap = varSet1.friendlyCap --Used to store the cap for the Friendlies team
+local friendlyName = varSet1.friendlyName
+local hostileName = varSet1.hostileName
+local defaultTeam = varSet1.defaultTeam
+local activeObj = varSet2.activeObj
+local currentObjScore = varSet2.currentObjScore
+local firstObjMax = varSet2.firstObjMax
+local secondObjMax = varSet2.secondObjMax
+local thirdObjMax = varSet2.thirdObjMax
+local currentObjMax = varSet2.currentObjMax
+
+--
+local zone1 = workspaceFldr.zone1
+local zone2a = workspaceFldr.zone2a
+local zone2b = workspaceFldr.zone2b
+local zone3 = workspaceFldr.zone3
+--
+local numOfElements
+local playerCount
+local time
+--[[END OF COMMON VARIABLES]]--
+
+function scrimmageModules.findPlayer(player, mytable)
+	for i, j in ipairs(mytable) do
+		if j == player then
+			return true
+		end
+	end
+end
+
+function scrimmageModules.tableRemove(player, mytable)
+	local thistable = mytable
+	for i, j in ipairs(thistable) do
+		if j == player then
+			table.remove(thistable, i)
+			return thistable
+		end
+	end
+end
+
+function scrimmageModules.playerTotal(mytable)
+	numOfElements = 0
+	for i, j  in ipairs(mytable) do
+		numOfElements += 1
+	end
+	return numOfElements
+end
+
+function scrimmageModules.tableAdd(player, mytable)
+	local thistable = mytable
+	table.insert(thistable, player)
+	return thistable
+end
+
+function scrimmageModules.showA()
+	if activeRaid.Value or varSet1.raidInitiating then
+		zone1.firstPoint.CanTouch = true
+		zone1.firstPointBase.Transparency = 0
+		zone1.firstPointHolo.Handles.Visible = true
+	end
+end
+
+function scrimmageModules.hideA()
+	zone1.firstPoint.CanTouch = false
+	zone1.firstPointBase.Transparency = 1
+	zone1.firstPointHolo.Handles.Visible = false
+end
+
+function scrimmageModules.showB()
+	if activeRaid.Value then
+		zone2a.secondPoint.CanTouch = true
+		zone2a.secondPointBase.Transparency = 0
+		zone2a.secondPointHolo.Handles.Visible = true
+		zone2b.secondPoint.CanTouch = true
+		zone2b.secondPointBase.Transparency = 0
+		zone2b.secondPointHolo.Handles.Visible = true
+	end
+end
+
+function scrimmageModules.hideB()
+	zone2a.secondPoint.CanTouch = false
+	zone2a.secondPointBase.Transparency = 1
+	zone2a.secondPointHolo.Handles.Visible = false
+	zone2b.secondPoint.CanTouch = false
+	zone2b.secondPointBase.Transparency = 1
+	zone2b.secondPointHolo.Handles.Visible = false
+end
+
+function scrimmageModules.showC()
+	if activeRaid.Value then
+		zone3.thirdPoint.CanTouch = true
+		zone3.thirdPointBase.Transparency = 0
+		zone3.thirdPointHolo.Handles.Visible = true
+	end
+end
+
+function scrimmageModules.hideC()
+	zone3.thirdPoint.CanTouch = false
+	zone3.thirdPointBase.Transparency = 1
+	zone3.thirdPointHolo.Handles.Visible = false
+end
+
+function scrimmageModules.addPlayer(player, table)
+	if not scrimmageModules.findPlayer(player, table) then
+		table.insert(table, player)
+		return table
+	end
+end
+
+function scrimmageModules.monitorTeams(hostile,friendly)
+	hostile.PlayerAdded:Connect(function()
+		varSet1.hostileCounter.Value += 1
+	end)
+	friendly.PlayerAdded:Connect(function()
+		varSet1.friendlyCounter.Value += 1
+	end)
+	hostile.PlayerRemoved:Connect(function()
+		if varSet1.hostileCounter.Value > 0 then
+			varSet1.hostileCounter.Value -= 1
+		end
+	end)
+	friendly.PlayerRemoved:Connect(function()
+		if varSet1.friendlyCounter.Value > 0 then
+			varSet1.friendlyCounter.Value -= 1
+		end
+	end)
+end
+
+function scrimmageModules.checkHostileFull(team)
+	local playerCount = 0
+	for i, j in pairs(team:GetPlayers()) do
+		playerCount += 1
+	end
+	if hostileCounter.Value ~= playerCount then
+		hostileCounter.Value = playerCount
+	end
+	if playerCount >= varSet1.hostileCap.Value then
+		return true
+	else 
+		return false
+	end
+end
+
+function scrimmageModules.checkFriendlyFull(team)
+	local playerCount = 0
+	for i, j in pairs(team:GetPlayers()) do
+		playerCount += 1
+	end
+	if friendlyCounter.Value ~= playerCount then
+		friendlyCounter.Value = playerCount
+	end
+	if playerCount >= varSet1.friendlyCap.Value then
+		return true
+	else 
+		return false
+	end
+end
+
+function scrimmageModules.timeCalculator()
+	time = timeRemainingS.Value
+	while time >= 0 and activeRaid do
+		time = timeRemainingS.Value
+		local mins = (time - time%60)/60 --Rounds time down to nearest 60 and then calculates how many minutes left in that set
+		local secs = time - mins*60 --Calculates the remaining seconds that weren't included in the rounding
+		local timeFormat = mins..":"..secs
+		timeRemaining.Value = timeFormat
+		wait(1)
+		timeRemainingS.Value -= 1
+		if timeRemainingS.Value <= 0 and not activeObj.Value == 4 and not activeObj.Value == 5 and not activeObj.Value == 6 then
+			scrimmageModules.terminateRaid(3)
+		elseif timeRemainingS.Value <= 0 and (activeObj.Value == 4 or activeObj.Value == 5 or activeObj.Value == 6) then
+			break
+		end
+	end
+end
+
+function scrimmageModules.createTeams(hostileNameA, friendlyNameA)
+	local hostileTeam = Instance.new("Team")
+	local friendlyTeam = Instance.new("Team")
+	hostileTeam.Parent = Teams
+	friendlyTeam.Parent = Teams
+	hostileTeam.Name = hostileNameA
+	friendlyTeam.Name = friendlyNameA
+	hostileTeam.TeamColor = BrickColor.new(1004)
+	friendlyTeam.TeamColor = BrickColor.new(309)
+	friendlyName.Value = friendlyNameA
+	hostileName.Value = hostileNameA
+	if Teams:FindFirstChild(friendlyNameA) and Teams:FindFirstChild(hostileNameA) then
+		return true
+	else 
+		return false
+	end
+end
+
+function scrimmageModules.destroyTeams()
+	local hostileToDestroy = Teams:FindFirstChild(hostileName.Value)
+	local friendlyToDestroy = Teams:FindFirstChild(friendlyName.Value)
+	for i, j in ipairs(Players:GetChildren()) do
+		if (j.Team == hostileToDestroy or j.Team == friendlyToDestroy) then
+			j.Team = Teams:FindFirstChild(defaultTeam.Value)
+			j.TeamColor = Teams:FindFirstChild(defaultTeam.Value).TeamColor
+		end
+	end
+	hostileToDestroy:Destroy()
+	friendlyToDestroy:Destroy()
+end
+
+function scrimmageModules.setCaps(hostile, friendly)
+	hostileCap.Value = hostile
+	friendlyCap.Value = friendly
+end
+
+function scrimmageModules.joinTeam(player, check) --Check is bool value used to signiy if hostile or friendly
+	if check then
+		if not scrimmageModules.checkFriendlyFull(Teams:FindFirstChild(friendlyName.Value)) then
+			player.Team = Teams:FindFirstChild(friendlyName.Value)
+			player.TeamColor = BrickColor.new(309)
+			friendlyCounter.Value += 1
+		else
+			return true --Returns true which signifies team is full
+		end
+	elseif not check then
+		if not scrimmageModules.checkHostileFull(Teams:FindFirstChild(hostileName.Value)) then
+			player.Team = Teams:FindFirstChild(hostileName.Value)
+			player.TeamColor = BrickColor.new(1004)
+			hostileCounter.Value += 1
+		else
+			return true --Returns true which signifies team is full
+		end
+	end
+end
+
+function scrimmageModules.updateNewPlayer(player)
+	if activeRaid.Value then
+		if activeObj.Value == 1 then
+			replicatedFldr.updateNewClient:FireClient(player.Value, activeObj.Value, currentObjScore.Value, currentObjMax.Value)
+		elseif activeObj.Value == 2 then
+			replicatedFldr.updateNewClient:FireClient(player.Value, activeObj.Value, currentObjScore.Value, currentObjMax.Value)
+		elseif activeObj.Value == 3 then
+			replicatedFldr.updateNewClient:FireClient(player.Value, activeObj.Value, currentObjScore.Value, currentObjMax.Value)		
+		end
+	end
+end
+
+function scrimmageModules.updateAllPlayers()
+	if activeRaid.Value then
+		print("firing!")
+		if activeObj.Value == 1 then
+			replicatedFldr.updateAllClient:FireAllClients(activeObj.Value, currentObjScore.Value, currentObjMax.Value)
+		elseif activeObj.Value == 2 then
+			replicatedFldr.updateAllClient:FireAllClients(activeObj.Value, currentObjScore.Value, currentObjMax.Value)
+		elseif activeObj.Value == 3 then
+			replicatedFldr.updateAllClient:FireAllClients(activeObj.Value, currentObjScore.Value, currentObjMax.Value)
+		elseif activeObj.Value == 4 or activeObj.Value == 5 or activeObj.Value == 6 then
+			replicatedFldr.updateAllClient:FireAllClients(activeObj.Value, currentObjScore.Value, currentObjMax.Value)
+			replicatedFldr.updateAllEnded:FireAllClients(activeObj.Value)
+		end
+	end
+end
+
+
+function scrimmageModules.updateToNextPoint()
+	if activeObj.Value == 1 then
+		currentObjScore.Value = 0
+		currentObjMax.Value = secondObjMax.Value
+		scrimmageModules.updateAllPlayers()
+		activeObj.Value += 1
+		scrimmageModules.hideA()
+		scrimmageModules.showB()
+	elseif activeObj.Value == 2 then
+		currentObjScore.Value = 0
+		currentObjMax.Value = thirdObjMax.Value
+		scrimmageModules.updateAllPlayers()
+		activeObj.Value += 1
+		scrimmageModules.hideB()
+		scrimmageModules.showC()
+	elseif activeObj.Value == 3 then
+		activeObj.Value += 1
+		scrimmageModules.hideC()
+		scrimmageModules.terminateRaid(1)
+	end
+end
+
+function scrimmageModules.addTime(time)
+	timeRemainingS.Value += time
+	wait(1)
+	replicatedFldr.updateClientTime:FireAllClients(timeRemaining.Value)
+end
+
+function scrimmageModules.terminateRaid(condition)
+	if condition == 1 then
+		activeObj.Value = 4
+		scrimmageModules.updateAllPlayers()
+	elseif condition == 2 then
+		activeObj.Value = 5
+		scrimmageModules.updateAllPlayers()
+	elseif condition == 3 then
+		activeObj.Value = 6
+		scrimmageModules.updateAllPlayers()
+	end
+	if condition >= 1 and condition <= 6 then
+		scrimmageModules.hideA()
+		scrimmageModules.hideB()
+		scrimmageModules.hideC()
+		timeRemainingS.Value = 0
+		scrimmageModules.destroyTeams()
+		hostileCounter.Value = 0
+		friendlyCounter.Value = 0
+		hostileCap.Value = nil
+		friendlyCap.Value = nil
+		hostileName.Value = ""
+		friendlyName.Value = ""
+		raidTarget.Value = ""
+		currentObjMax.Value = nil
+		currentObjScore.Value = nil
+		scrimmageModules.updateAllPlayers()
+		activeRaid.Value = false
+		wait(5)
+		for i,j in ipairs(Players:GetPlayers()) do
+			j:LoadCharacter()
+		end
+	end
+end
+
+function scrimmageModules.initializeRaid(hostileTeama, friendlyTeama, hostileCapa, friendlyCapa)
+	raidInitiating.Value = true
+	scrimmageModules.createTeams(hostileTeama, friendlyTeama)
+	hostileCap.Value = hostileCapa
+	friendlyCap.Value = friendlyCapa
+	activeObj.Value = 1
+	currentObjMax.Value = firstObjMax.Value
+	currentObjScore.Value = 0
+	scrimmageModules.showA()
+	timeRemainingS.Value = raidTime
+	task.spawn(function()
+		scrimmageModules.timeCalculator()
+	end)
+	raidInitiating.Value = false
+	activeRaid.Value = true
+	scrimmageModules.updateAllPlayers()
+end
+
+return scrimmageModules
