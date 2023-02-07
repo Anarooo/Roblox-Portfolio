@@ -8,4 +8,4 @@ ArskUserMenu is a project in which I designed the UI and scripted the backend fo
 I have not published the source-code of this project due to its quality of production, however the menu can be located here: https://www.roblox.com/games/12403564709/ArskUserMenu
 
 
-Notice: Like with all of my assets/intelectual property, this is not a publicly available asset, nor will it ever be unless I specifically list it as so and release its Source Code IN THIS REPOSITORY. Any unauthorised usage of this asset specifically will be swiftly responded to, and will result in a DMCA Takedown request if demands to remove the content are not immediately complied with.
+*Notice: Like with all of my assets/intelectual property, this is not a publicly available asset, nor will it ever be unless I specifically list it as so and release its Source Code IN THIS REPOSITORY. Any unauthorised usage of this asset specifically will be swiftly responded to, and will result in a DMCA Takedown request if demands to remove the content are not immediately complied with.*
